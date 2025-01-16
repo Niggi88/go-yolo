@@ -13,3 +13,9 @@ tar -xvf onnxruntime-linux-x64-1.20.0.tgz
 ```
 
 - place in detector/
+
+
+### setup test images
+- test images go into ./examples/images
+    - annotations *name.txt
+    - image *name.jpeg
