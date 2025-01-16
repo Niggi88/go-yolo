@@ -15,6 +15,7 @@ onnxruntime-linux-x64-1.20.0/
 *.dylib
 *.onnx
 *.txt
+*.pb
 
 # Test binary, built with `go test -c`
 *.test
