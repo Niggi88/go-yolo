@@ -1,0 +1,12 @@
+yolo_detection/
+├── main.go
+├── go.mod
+├── detector/
+│   ├── detector.go     # YOLO-specific detection logic
+│   └── models.go       # YOLO-related types
+├── imageutils/         # New package for reusable image processing
+│   ├── letterbox.go    # Letterboxing implementation
+│   └── types.go        # Shared image processing types
+└── examples/
+    ├── images/
+    └── models/
