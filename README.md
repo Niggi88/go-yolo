@@ -1,27 +1,37 @@
-# go-yolo
+# Go-YOLO
 
-### get onnx runtime
+## Getting Started
 
-To download and extract ONNX Runtime, you can use the following commands:
+### Download ONNX Runtime
 
-- download
+To download and extract ONNX Runtime, run the following commands:
+
+#### Download and Extract
 
 ```bash
 wget https://github.com/microsoft/onnxruntime/releases/download/v1.20.0/onnxruntime-linux-x64-1.20.0.tgz
 tar -xvf onnxruntime-linux-x64-1.20.0.tgz
-
 ```
 
-- place in detector/
+Move the extracted files to the `detector/` directory.
 
-### model setup
+---
 
-- models go into ./examples/models
-  - yolo model as object_detetion1.onnx
-  - binary classifiers as \*name.pb
+### Model Setup
 
-### setup test images
+1. **Place Models in the Correct Directory**  
+   Models should be stored in `./examples/models`.
 
-- test images go into ./examples/images
-  - annotations \*name.txt
-  - image \*name.jpeg
+   - YOLO model: Save as `object_detection1.onnx`
+   - Binary classifiers: Save as `*name.pb`
+
+---
+
+### Setup Test Images
+
+1. **Store Test Images in the Correct Directory**  
+   Test images should be saved in `./examples/images`.
+
+2. **File Organization**
+   - **Annotations:** Save as `*name.txt`
+   - **Images:** Save as `*name.jpeg`
