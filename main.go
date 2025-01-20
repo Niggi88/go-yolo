@@ -5,23 +5,66 @@ import (
 	"image"
 	_ "image/jpeg"
 	"os"
+	"time"
 	"yolo_detection/detector"
 	"yolo_detection/imageutils"
 )
 
 
+func measureImageDetectionTime(yolo *detector.YOLODetector, imagePath string, runs int) (time.Duration, time.Duration, []detector.Detection, error) {
+    var totalLoadTime, totalDetectTime time.Duration
+    var lastDetections []detector.Detection
+
+    for i := 0; i < runs; i++ {
+        // Measure image loading time
+        loadStart := time.Now()
+        img, err := loadImage(imagePath)
+        if err != nil {
+            return 0, 0, nil, fmt.Errorf("error loading image: %v", err)
+        }
+        loadTime := time.Since(loadStart)
+        totalLoadTime += loadTime
+
+        // Measure detection time
+        detectStart := time.Now()
+        detections, err := yolo.Detect(img)
+        if err != nil {
+            return 0, 0, nil, fmt.Errorf("error running detection: %v", err)
+        }
+        detectTime := time.Since(detectStart)
+        totalDetectTime += detectTime
+
+        // Store last run's detections
+        lastDetections = detections
+
+        fmt.Printf("Run %d - Load: %v, Detect: %v\n", i+1, loadTime, detectTime)
+    }
+
+    avgLoadTime := totalLoadTime / time.Duration(runs)
+    avgDetectTime := totalDetectTime / time.Duration(runs)
+	fmt.Println("Average load time:", avgLoadTime)
+	fmt.Println("Average detect time: ", avgDetectTime)
+    return avgLoadTime, avgDetectTime, lastDetections, nil
+}
+
+
 func main(){
+	imagePath := "examples/images/fresh_food_counter.jpeg"
+	modelPath := "examples/models/object_detection1.onnx"
+	runs := 10
 
 	// load model
-	yolo, err := detector.New("examples/models/object_detection1.onnx")
+	yolo, err := detector.New(modelPath)
 	if err != nil {
 		fmt.Printf("Error initializing detector: %v\n", err)
 		return
 	}
 	defer yolo.Close()
+	// *detector.YOLODetector
+	measureImageDetectionTime(yolo, imagePath, runs)
 
 	// load image
-	img, err := loadImage("examples/images/fresh_food_counter.jpeg")
+	img, err := loadImage(imagePath)
 	if err != nil {
 		fmt.Printf("Error loading image %v\n", err)
 		return
