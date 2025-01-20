@@ -11,6 +11,8 @@ import (
 )
 
 
+
+
 func measureImageDetectionTime(yolo *detector.YOLODetector, imagePath string, runs int) (time.Duration, time.Duration, []detector.Detection, error) {
     var totalLoadTime, totalDetectTime time.Duration
     var lastDetections []detector.Detection
@@ -37,7 +39,7 @@ func measureImageDetectionTime(yolo *detector.YOLODetector, imagePath string, ru
         // Store last run's detections
         lastDetections = detections
 
-        fmt.Printf("Run %d - Load: %v, Detect: %v\n", i+1, loadTime, detectTime)
+        // fmt.Printf("Run %d - Load: %v, Detect: %v\n", i+1, loadTime, detectTime)
     }
 
     avgLoadTime := totalLoadTime / time.Duration(runs)
@@ -63,12 +65,25 @@ func main(){
 	// *detector.YOLODetector
 	measureImageDetectionTime(yolo, imagePath, runs)
 
+	
+
 	// load image
 	img, err := loadImage(imagePath)
 	if err != nil {
 		fmt.Printf("Error loading image %v\n", err)
 		return
 	}
+
+	// Run benchmark
+    result, err := measureInferenceTime(yolo, img, 100)
+    if err != nil {
+        fmt.Printf("Error during benchmark: %v\n", err)
+        return
+    }
+
+    fmt.Printf("\nBenchmark Results:\n")
+    fmt.Printf("Average inference time over %d runs: %v\n", 
+        result.NumRuns, result.InferenceTime)
 
 	// run detection
 	detections, err := yolo.Detect(img)

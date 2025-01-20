@@ -94,6 +94,13 @@ func (d *YOLODetector) Close() error {
     return nil
 }
 
+
+// RunInferenceOnly executes just the neural network session.Run() step
+func (d *YOLODetector) RunInferenceOnly() error {
+    return d.session.Run()
+}
+
+
 func (d *YOLODetector) Detect(img image.Image) ([]Detection, error){
 
 	targetSize := imageutils.ImageSize{
@@ -122,10 +129,10 @@ func (d *YOLODetector) Detect(img image.Image) ([]Detection, error){
 	outputData := d.outputTensor.GetData()
 
 	detections := d.processPredictions(outputData, params)
-	fmt.Printf("fount %d detections before NMS\n", len(detections))
+	// fmt.Printf("found %d detections before NMS\n", len(detections))
 
 	detections = d.applyNMS(detections)
-	fmt.Printf("fount %d detections before NMS\n", len(detections))
+	// fmt.Printf("found %d detections before NMS\n", len(detections))
 	
 	 // Convert back to original image coordinates using existing UnLetterbox
     for i := range detections {
@@ -201,8 +208,8 @@ func (d *YOLODetector) processPredictions(outputData []float32, params imageutil
 		}
 	}
 
-	fmt.Printf("Found %d detections above confidence threshold %.2f\n", 
-        len(detections), d.config.ConfThreshold)
+	// fmt.Printf("Found %d detections above confidence threshold %.2f\n", 
+    //     len(detections), d.config.ConfThreshold)
     
     return detections
 }
