@@ -3,6 +3,7 @@
 #
 __pycache__/
 venv/
+models/
 # onnx 
 onnxruntime-linux-x64-1.20.0/
 
