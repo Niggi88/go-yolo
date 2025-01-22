@@ -1,6 +1,8 @@
 package classifier
 
-import onnxruntime "github.com/yalue/onnxruntime_go"
+import (
+	onnxruntime "github.com/yalue/onnxruntime_go"
+)
 
 // bounding box
 type Box struct {
@@ -11,15 +13,13 @@ type Box struct {
 }
 
 // detection (one box with class and confidence)
-type Detection struct {
-	Box		Box
+type Classification struct {
 	Class	string
 	Confidence float32
 }
 
 type Classifier struct {
 	modelPath 	string
-	// classes		[]string
 	session 	*onnxruntime.Session[float32]
 	config		Config
     inputTensor   *onnxruntime.Tensor[float32]
