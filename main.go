@@ -47,6 +47,44 @@ func measureImageDetectionTime(yolo *detector.YOLODetector, imagePath string, ru
 	return avgLoadTime, avgDetectTime, lastDetections, nil
 }
 
+
+
+func measureImageClassificationTime(model *classifier.Classifier, imagePath string, runs int) (time.Duration, time.Duration, []float32, error) {
+	var totalLoadTime, totalClassificationTime time.Duration
+	var lastClassifiactions []float32
+
+	for i := 0; i < runs; i++ {
+		// Measure image loading time
+		loadStart := time.Now()
+		img, err := loadImage(imagePath)
+		if err != nil {
+			return 0, 0, nil, fmt.Errorf("error loading image: %v", err)
+		}
+		loadTime := time.Since(loadStart)
+		totalLoadTime += loadTime
+
+		// Measure detection time
+		classifyStart := time.Now()
+		classifications, err := model.Classify(img)
+		if err != nil {
+			return 0, 0, nil, fmt.Errorf("error running detection: %v", err)
+		}
+		detectTime := time.Since(classifyStart)
+		totalClassificationTime += detectTime
+
+		// Store last run's detections
+		lastClassifiactions = classifications
+
+		// fmt.Printf("Run %d - Load: %v, Detect: %v\n", i+1, loadTime, detectTime)
+	}
+
+	avgLoadTime := totalLoadTime / time.Duration(runs)
+	avgDetectTime := totalClassificationTime / time.Duration(runs)
+	fmt.Println("Average load time:", avgLoadTime)
+	fmt.Println("Average classification time: ", avgDetectTime)
+	return avgLoadTime, avgDetectTime, lastClassifiactions, nil
+}
+
 func RunDetector() {
 	imagePath := "examples/images/fresh_food_counter.jpeg"
 	modelPath := "examples/models/object_detection1.onnx"
@@ -70,7 +108,7 @@ func RunDetector() {
 	}
 
 	// Run benchmark
-	result, err := measureInferenceTime(yolo, img, 100)
+	result, err := measureInferenceTimeYolo(yolo, img, 100)
 	if err != nil {
 		fmt.Printf("Error during benchmark: %v\n", err)
 		return
@@ -101,15 +139,16 @@ func RunDetector() {
 func RunClassifier() {
 	imagePath := "examples/images/bundle.jpeg"
 	modelPath := "pbtf2onnx/models/lower_cart_empty_loaded.onnx"
+	runs := 10
 
 	// load model
-	classifier_instance, err := classifier.New(modelPath)
+	model, err := classifier.New(modelPath)
 	if err != nil {
 		fmt.Printf("Error initializing detector: %v\n", err)
 		return
 	}
-	defer classifier_instance.Close()
-	// *detector.YOLODetector
+	defer model.Close()
+	measureImageClassificationTime(model, imagePath, runs)
 
 	// load image
 	img, err := loadImage(imagePath)
@@ -118,27 +157,28 @@ func RunClassifier() {
 		return
 	}
 
+	result, err := measureInferenceTimeBinary(model, img, 100)
+	if err != nil {
+		fmt.Printf("Error during benchmark: %v\n", err)
+		return
+	}
+	fmt.Printf("\nBenchmark Results:\n")
+	fmt.Printf("Average inference time over %d runs: %v\n",
+		result.NumRuns, result.InferenceTime)
 	// run detection
-	classifications, err := classifier_instance.Detect(img)
+	classifications, err := model.Classify(img)
 	if err != nil {
 		fmt.Printf("Error running detectioon: %v\n", err)
 		return
 	}
 
 	fmt.Println(classifications)
-	// // print results
-	// for _, det := range classifications {
-	// 	fmt.Printf("Found %s  (confidence %.2f) ad box: %+v\n",
-	// 		det.Class, det.Confidence, det.Box)
-	// }
 
-	// if err := DrawDebug(img, detections, "debug_output.jpg"); err != nil {
-	// 	fmt.Printf("Failed to save debug image: %v\n", err)
-	// }
 }
 
 func main() {
 	RunClassifier()
+	// RunDetector()
 }
 
 func loadImage(filepath string) (image.Image, error) {
