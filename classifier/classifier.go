@@ -1,6 +1,7 @@
 package classifier
 
 import (
+	"context"
 	"fmt"
 	"image"
 	"os"
@@ -10,7 +11,7 @@ import (
 )
 
 // create new classifier
-func New(modelPath string) (*Classifier, error) {
+func New(ctx context.Context, modelPath string) (*Classifier, error) {
 	INPUT_LAYER_NAME := "input_1:0"  // "x:0" //"x"
 	OUTPUT_LAYER_NAME := "myOutput"// "Identity:0"
 
@@ -22,7 +23,11 @@ func New(modelPath string) (*Classifier, error) {
 		panic(err)
 	}
 	// defer onnxruntime.DestroyEnvironment()
-
+	go func() {
+		<-ctx.Done()
+		onnxruntime.DestroyEnvironment()
+		fmt.Println("Destroy Environment")
+	}()
 
 	// check if file exists
 	if _, err := os.Stat(modelPath); err != nil {

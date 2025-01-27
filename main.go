@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"image"
 	_ "image/jpeg"
@@ -142,7 +143,10 @@ func RunClassifier() {
 	runs := 10
 
 	// load model
-	model, err := classifier.New(modelPath)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	
+	model, err := classifier.New(ctx, modelPath)
 	if err != nil {
 		fmt.Printf("Error initializing detector: %v\n", err)
 		return
