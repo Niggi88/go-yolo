@@ -10,7 +10,37 @@ import (
 	"yolo_detection/classifier"
 	"yolo_detection/detector"
 	"yolo_detection/imageutils"
+
+	onnxruntime "github.com/yalue/onnxruntime_go"
 )
+
+func main() {
+	// START-SCOPE
+
+	onnxruntime.SetSharedLibraryPath("detector/onnxruntime-linux-x64-1.20.0/lib/libonnxruntime.so")
+	err := onnxruntime.InitializeEnvironment()
+	if err != nil {
+		panic(err)
+	}
+
+	defer func() {
+		onnxruntime.DestroyEnvironment()
+		fmt.Println("Destroy Environment")
+	}()
+
+	ctx, cancel := context.WithCancel(context.Background())
+
+	RunClassifier(ctx)
+	cancel()
+
+	// RunDetector()
+
+	// END-SCOPE
+	// -> cancel() -> inputTensor.Destroy, outputTensor.Destroy(), session.Destroy()
+	// -> onnxruntime.DestroyEnvironment()
+
+	time.Sleep(10 * time.Second)
+}
 
 func measureImageDetectionTime(yolo *detector.YOLODetector, imagePath string, runs int) (time.Duration, time.Duration, []detector.Detection, error) {
 	var totalLoadTime, totalDetectTime time.Duration
@@ -47,8 +77,6 @@ func measureImageDetectionTime(yolo *detector.YOLODetector, imagePath string, ru
 	fmt.Println("Average detect time: ", avgDetectTime)
 	return avgLoadTime, avgDetectTime, lastDetections, nil
 }
-
-
 
 func measureImageClassificationTime(model *classifier.Classifier, imagePath string, runs int) (time.Duration, time.Duration, []float32, error) {
 	var totalLoadTime, totalClassificationTime time.Duration
@@ -137,21 +165,16 @@ func RunDetector() {
 	}
 }
 
-func RunClassifier() {
+func RunClassifier(ctx context.Context) {
 	imagePath := "examples/images/bundle.jpeg"
 	modelPath := "pbtf2onnx/models/lower_cart_empty_loaded.onnx"
 	runs := 10
 
-	// load model
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-	
 	model, err := classifier.New(ctx, modelPath)
 	if err != nil {
 		fmt.Printf("Error initializing detector: %v\n", err)
 		return
 	}
-	defer model.Close()
 	measureImageClassificationTime(model, imagePath, runs)
 
 	// load image
@@ -175,14 +198,8 @@ func RunClassifier() {
 		fmt.Printf("Error running detectioon: %v\n", err)
 		return
 	}
-
 	fmt.Println(classifications)
 
-}
-
-func main() {
-	RunClassifier()
-	// RunDetector()
 }
 
 func loadImage(filepath string) (image.Image, error) {

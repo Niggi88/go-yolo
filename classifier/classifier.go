@@ -12,22 +12,11 @@ import (
 
 // create new classifier
 func New(ctx context.Context, modelPath string) (*Classifier, error) {
-	INPUT_LAYER_NAME := "input_1:0"  // "x:0" //"x"
-	OUTPUT_LAYER_NAME := "myOutput"// "Identity:0"
+	fmt.Println("SCOPE: Classifier.New")
+	defer fmt.Println("SCOPE: Classifier.New END")
 
-	// cmake  libonnxruntime_providers_shared.so  libonnxruntime.so  libonnxruntime.so.1  libonnxruntime.so.1.20.0  pkgconfig
-	onnxruntime.SetSharedLibraryPath("detector/onnxruntime-linux-x64-1.20.0/lib/libonnxruntime.so")
-	
-	err := onnxruntime.InitializeEnvironment()
-	if err != nil {
-		panic(err)
-	}
-	// defer onnxruntime.DestroyEnvironment()
-	go func() {
-		<-ctx.Done()
-		onnxruntime.DestroyEnvironment()
-		fmt.Println("Destroy Environment")
-	}()
+	INPUT_LAYER_NAME := "input_1:0" // "x:0" //"x"
+	OUTPUT_LAYER_NAME := "myOutput" // "Identity:0"
 
 	// check if file exists
 	if _, err := os.Stat(modelPath); err != nil {
@@ -40,6 +29,12 @@ func New(ctx context.Context, modelPath string) (*Classifier, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to create input tensor: %v", err)
 	}
+	go func() {
+		fmt.Println("Waiting Destroy inputTensor")
+		<-ctx.Done()
+		inputTensor.Destroy()
+		fmt.Println("Destroy inputTensor")
+	}()
 
 	// pre-allocate output tensor
 	outputShape := []int64{1, 2} // Common YOLOv5 output shape
@@ -47,18 +42,30 @@ func New(ctx context.Context, modelPath string) (*Classifier, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to create output tensor: %v", err)
 	}
+	go func() {
+		fmt.Println("Waiting Destroy outputTensor")
+		<-ctx.Done()
+		outputTensor.Destroy()
+		fmt.Println("Destroy outputTensor")
+	}()
 
 	// create ONNX runtime session
 	session, err := onnxruntime.NewSession(
 		modelPath,
-		[]string{INPUT_LAYER_NAME},        // Run options
-		[]string{OUTPUT_LAYER_NAME}, // Input names (empty means use default names)
+		[]string{INPUT_LAYER_NAME},                   // Run options
+		[]string{OUTPUT_LAYER_NAME},                  // Input names (empty means use default names)
 		[]*onnxruntime.Tensor[float32]{inputTensor},  // Input tensors
 		[]*onnxruntime.Tensor[float32]{outputTensor}, // Output tensors
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create ONNX session :%v", err)
 	}
+	go func() {
+		fmt.Println("Waiting destroy session")
+		<-ctx.Done()
+		session.Destroy()
+		fmt.Println("Destroy session")
+	}()
 
 	model := &Classifier{
 		modelPath:    modelPath,
@@ -69,21 +76,6 @@ func New(ctx context.Context, modelPath string) (*Classifier, error) {
 	}
 
 	return model, nil
-}
-
-// Close releases any resources
-func (d *Classifier) Close() error {
-	if d.session != nil {
-		d.session.Destroy()
-	}
-	if d.inputTensor != nil {
-		d.inputTensor.Destroy()
-	}
-	if d.outputTensor != nil {
-		d.outputTensor.Destroy()
-	}
-	onnxruntime.DestroyEnvironment()
-	return nil
 }
 
 // RunInferenceOnly executes just the neural network session.Run() step
