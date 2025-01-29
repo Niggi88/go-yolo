@@ -1,6 +1,7 @@
 package detector
 
 import (
+	"context"
 	"fmt"
 	"image"
 	"os"
@@ -11,16 +12,12 @@ import (
 )
 
 // create new detector
-func New(modelPath string) (*YOLODetector, error){
-
-	// cmake  libonnxruntime_providers_shared.so  libonnxruntime.so  libonnxruntime.so.1  libonnxruntime.so.1.20.0  pkgconfig
-	onnxruntime.SetSharedLibraryPath("detector/onnxruntime-linux-x64-1.20.0/lib/libonnxruntime.so")
-
-	err := onnxruntime.InitializeEnvironment()
-	if err != nil {
-		panic(err)
-	}
-	defer onnxruntime.DestroyEnvironment()
+func New(ctx context.Context, modelPath string) (*YOLODetector, error){
+	fmt.Println("SCOPE: Detector.New")
+	defer fmt.Println("SCOPE: Detector.New END")
+	
+	INPUT_LAYER_NAME := "images"
+	OUPUT_LAYER_NAME := "output0"
 
 	classes := []string {
 		"cigarettes", "fresh_food_counter", "generic_coffee", "jack_daniels", "redbull", "toffifee",
@@ -32,13 +29,18 @@ func New(modelPath string) (*YOLODetector, error){
 	}
 
 	// pre-allocate input tensor 1, 3, h, w
-	
 	inputShape := onnxruntime.NewShape(1, 3, int64(DefaultConfig.InputHeight), int64(DefaultConfig.InputWidth))
-	// inputTensor, err := onnxruntime.NewTensor[float32](inputShape)
 	inputTensor, err := onnxruntime.NewEmptyTensor[float32](inputShape)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create input tensor: %v", err)
 	}
+	go func(){
+		fmt.Println("waiting to destroy inputtensor")
+		<-ctx.Done()
+		inputTensor.Destroy()
+		fmt.Println("destroyed inputTensor")
+	}()
+	
 
 	// pre-allocate output tensor
 	// YOLOv5 -> [1, num pred, num cl + 5]
@@ -47,21 +49,30 @@ func New(modelPath string) (*YOLODetector, error){
 	if err != nil {
 		return nil, fmt.Errorf("failed to create output tensor: %v", err)
 	}
-	
+	go func (){
+		fmt.Println("waiting to destroy ouputtensor")
+		<-ctx.Done()
+		outputTensor.Destroy()
+		fmt.Println("destroyed outputtensonr")
+	}()
+
 	// create ONNX runtime session
 	session, err := onnxruntime.NewSession(
         modelPath,
-        []string{"images"},      // Run options
-        []string{"output0"},      // Input names (empty means use default names)
+        []string{INPUT_LAYER_NAME},      // Run options
+        []string{OUPUT_LAYER_NAME},      // Input names (empty means use default names)
         []*onnxruntime.Tensor[float32]{inputTensor},             // Input tensors
         []*onnxruntime.Tensor[float32]{outputTensor},             // Output tensors
     )
 	if err != nil {
 		return nil, fmt.Errorf("failed to create ONNX session :%v", err)
 	}
-
-	// input details
-	// inputInfo := session.GetInputs()
+	go func(){
+		fmt.Println("waiting to destroy detector session")
+		<-ctx.Done()
+        session.Destroy()
+		fmt.Println("destroyed detector session")	
+	}()
 
 
 	detector := &YOLODetector{
@@ -82,15 +93,6 @@ func New(modelPath string) (*YOLODetector, error){
 
 // Close releases any resources
 func (d *YOLODetector) Close() error {
-    if d.session != nil {
-        d.session.Destroy()
-    }
-    if d.inputTensor != nil {
-        d.inputTensor.Destroy()
-    }
-    if d.outputTensor != nil {
-        d.outputTensor.Destroy()
-    }
     return nil
 }
 

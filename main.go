@@ -17,6 +17,7 @@ import (
 func main() {
 	// START-SCOPE
 
+	// cmake  libonnxruntime_providers_shared.so  libonnxruntime.so  libonnxruntime.so.1  libonnxruntime.so.1.20.0  pkgconfig
 	onnxruntime.SetSharedLibraryPath("detector/onnxruntime-linux-x64-1.20.0/lib/libonnxruntime.so")
 	err := onnxruntime.InitializeEnvironment()
 	if err != nil {
@@ -29,8 +30,10 @@ func main() {
 	}()
 
 	ctx, cancel := context.WithCancel(context.Background())
-
 	RunClassifier(ctx)
+	cancel()
+	ctx, cancel = context.WithCancel(context.Background())
+	RunDetector((ctx))
 	cancel()
 
 	// RunDetector()
@@ -114,13 +117,13 @@ func measureImageClassificationTime(model *classifier.Classifier, imagePath stri
 	return avgLoadTime, avgDetectTime, lastClassifiactions, nil
 }
 
-func RunDetector() {
+func RunDetector(ctx context.Context) {
 	imagePath := "examples/images/fresh_food_counter.jpeg"
 	modelPath := "examples/models/object_detection1.onnx"
 	runs := 10
 
 	// load model
-	yolo, err := detector.New(modelPath)
+	yolo, err := detector.New(ctx, modelPath)
 	if err != nil {
 		fmt.Printf("Error initializing detector: %v\n", err)
 		return
