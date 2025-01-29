@@ -123,14 +123,14 @@ func RunDetector(ctx context.Context) {
 	runs := 10
 
 	// load model
-	yolo, err := detector.New(ctx, modelPath)
+	model, err := detector.New(ctx, modelPath)
 	if err != nil {
 		fmt.Printf("Error initializing detector: %v\n", err)
 		return
 	}
-	defer yolo.Close()
+
 	// *detector.YOLODetector
-	measureImageDetectionTime(yolo, imagePath, runs)
+	measureImageDetectionTime(model, imagePath, runs)
 
 	// load image
 	img, err := loadImage(imagePath)
@@ -140,7 +140,7 @@ func RunDetector(ctx context.Context) {
 	}
 
 	// Run benchmark
-	result, err := measureInferenceTimeYolo(yolo, img, 100)
+	result, err := measureInferenceTimeYolo(model, img, 100)
 	if err != nil {
 		fmt.Printf("Error during benchmark: %v\n", err)
 		return
@@ -151,7 +151,7 @@ func RunDetector(ctx context.Context) {
 		result.NumRuns, result.InferenceTime)
 
 	// run detection
-	detections, err := yolo.Detect(img)
+	detections, err := model.Detect(img)
 	if err != nil {
 		fmt.Printf("Error running detectioon: %v\n", err)
 		return

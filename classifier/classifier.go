@@ -15,9 +15,8 @@ func New(ctx context.Context, modelPath string) (*Classifier, error) {
 	fmt.Println("SCOPE: Classifier.New")
 	defer fmt.Println("SCOPE: Classifier.New END")
 
-	INPUT_LAYER_NAME := "input_1:0" // "x:0" //"x"
-	OUTPUT_LAYER_NAME := "myOutput" // "Identity:0"
-
+	INPUT_LAYER_NAME := "input_1:0" 
+	OUTPUT_LAYER_NAME := "myOutput" 
 	// check if file exists
 	if _, err := os.Stat(modelPath); err != nil {
 		return nil, fmt.Errorf("model file not found: %v", err)
@@ -37,7 +36,7 @@ func New(ctx context.Context, modelPath string) (*Classifier, error) {
 	}()
 
 	// pre-allocate output tensor
-	outputShape := []int64{1, 2} // Common YOLOv5 output shape
+	outputShape := []int64{1, 2} // 2 possible classes
 	outputTensor, err := onnxruntime.NewEmptyTensor[float32](outputShape)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create output tensor: %v", err)

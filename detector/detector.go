@@ -91,11 +91,6 @@ func New(ctx context.Context, modelPath string) (*YOLODetector, error){
     return detector, nil
 }
 
-// Close releases any resources
-func (d *YOLODetector) Close() error {
-    return nil
-}
-
 
 // RunInferenceOnly executes just the neural network session.Run() step
 func (d *YOLODetector) RunInferenceOnly() error {
