@@ -30,10 +30,10 @@ func main() {
 	}()
 
 	ctx, cancel := context.WithCancel(context.Background())
-	RunClassifier(ctx)
+	RunDetector((ctx))
 	cancel()
 	ctx, cancel = context.WithCancel(context.Background())
-	RunDetector((ctx))
+	RunClassifier(ctx)
 	cancel()
 
 	// RunDetector()
@@ -202,7 +202,9 @@ func RunClassifier(ctx context.Context) {
 		return
 	}
 	fmt.Println(classifications)
-
+	probEmpty := classifications[0]
+	probLoaded := classifications[1]
+	fmt.Printf("Probability Empty: %v, Probability Loaded: %v", probEmpty, probLoaded)
 }
 
 func loadImage(filepath string) (image.Image, error) {
