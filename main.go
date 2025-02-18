@@ -30,11 +30,14 @@ func main() {
 	}()
 
 	ctx, cancel := context.WithCancel(context.Background())
-	RunDetector((ctx))
+	debugClassifier(ctx)
 	cancel()
-	ctx, cancel = context.WithCancel(context.Background())
-	RunClassifier(ctx)
-	cancel()
+	// ctx, cancel := context.WithCancel(context.Background())
+	// RunDetector(ctx)
+	// cancel()
+	// ctx, cancel = context.WithCancel(context.Background())
+	// RunClassifier(ctx)
+	// cancel()
 
 	// RunDetector()
 
@@ -42,7 +45,7 @@ func main() {
 	// -> cancel() -> inputTensor.Destroy, outputTensor.Destroy(), session.Destroy()
 	// -> onnxruntime.DestroyEnvironment()
 
-	time.Sleep(10 * time.Second)
+	time.Sleep(1 * time.Second)
 }
 
 func measureImageDetectionTime(yolo *detector.YOLODetector, imagePath string, runs int) (time.Duration, time.Duration, []detector.Detection, error) {
@@ -79,6 +82,35 @@ func measureImageDetectionTime(yolo *detector.YOLODetector, imagePath string, ru
 	fmt.Println("Average load time:", avgLoadTime)
 	fmt.Println("Average detect time: ", avgDetectTime)
 	return avgLoadTime, avgDetectTime, lastDetections, nil
+}
+
+func debugClassifier(ctx context.Context) {
+	fmt.Println("debug classifications")
+	imagePath := "/home/niklas/code/imageClassifierService/testImages/bundle_loaded.jpeg"
+	modelPath := "/home/niklas/code/imageClassifierService/networks/binary.onnx"
+
+	model, err := classifier.New(ctx, modelPath)
+	if err != nil {
+		fmt.Printf("Error initializing detector: %v\n", err)
+		return
+	}
+
+	// load image
+	img, err := loadImage(imagePath)
+	if err != nil {
+		fmt.Printf("Error loading image %v\n", err)
+		return
+	}
+
+	classifications, err := model.Classify(img)
+	if err != nil {
+		fmt.Printf("Error running detectioon: %v\n", err)
+		return
+	}
+	fmt.Println(classifications)
+	probEmpty := classifications[0]
+	probLoaded := classifications[1]
+	fmt.Printf("Probability Empty: %v, Probability Loaded: %v", probEmpty, probLoaded)
 }
 
 func measureImageClassificationTime(model *classifier.Classifier, imagePath string, runs int) (time.Duration, time.Duration, []float32, error) {
