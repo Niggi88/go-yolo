@@ -8,10 +8,10 @@ import (
 
 
 func normalizeColor(color uint32) float32 {
-    // First convert from 16-bit (0-65535) to 8-bit (0-255)
-    color8bit := color >> 8
-    // Then normalize to 0-1 range
-    return float32(color8bit) / 255.0
+    color8bit := float32(color >> 8)
+    normalized := ((color8bit) / 255.0)
+    // fmt.Printf("color: %d, color8bit: %f, normalized: %f\n", color, color8bit, normalized)
+    return normalized
 }
 
 func PreprocessImage(img image.Image, targetSize ImageSize) ([]float32, LetterboxParams) {

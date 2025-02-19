@@ -36,6 +36,6 @@ type Config struct {
 var DefaultConfig = Config{
 	InputWidth: 	416,
 	InputHeight: 	416,
-	ConfThreshold:  0.25,
+	ConfThreshold:  0.15,
 	IOUThreshold: 	0.45,
 }

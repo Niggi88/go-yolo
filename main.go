@@ -32,9 +32,9 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	RunDetector((ctx))
 	cancel()
-	ctx, cancel = context.WithCancel(context.Background())
-	RunClassifier(ctx)
-	cancel()
+	// ctx, cancel = context.WithCancel(context.Background())
+	// RunClassifier(ctx)
+	// cancel()
 
 	// RunDetector()
 
@@ -42,7 +42,7 @@ func main() {
 	// -> cancel() -> inputTensor.Destroy, outputTensor.Destroy(), session.Destroy()
 	// -> onnxruntime.DestroyEnvironment()
 
-	time.Sleep(10 * time.Second)
+	time.Sleep(1 * time.Second)
 }
 
 func measureImageDetectionTime(yolo *detector.YOLODetector, imagePath string, runs int) (time.Duration, time.Duration, []detector.Detection, error) {
@@ -118,14 +118,16 @@ func measureImageClassificationTime(model *classifier.Classifier, imagePath stri
 }
 
 func RunDetector(ctx context.Context) {
+	// imagePath := "examples/images/fresh_food_counter.jpeg"
 	imagePath := "examples/images/fresh_food_counter.jpeg"
+
 	modelPath := "examples/models/object_detection1.onnx"
 	runs := 10
 
 	// load model
 	model, err := detector.New(ctx, modelPath)
 	if err != nil {
-		fmt.Printf("Error initializing detector: %v\n", err)
+		// fmt.Printf("Error initializing detector: %v\n", err)
 		return
 	}
 
@@ -153,15 +155,18 @@ func RunDetector(ctx context.Context) {
 	// run detection
 	detections, err := model.Detect(img)
 	if err != nil {
-		fmt.Printf("Error running detectioon: %v\n", err)
+		fmt.Printf("Error running detectDrawioon: %v\n", err)
 		return
 	}
 
 	// print results
+	fmt.Println("Detections")
 	for _, det := range detections {
 		fmt.Printf("Found %s  (confidence %.2f) ad box: %+v\n",
 			det.Class, det.Confidence, det.Box)
 	}
+	fmt.Println("-------------------")
+
 
 	if err := DrawDebug(img, detections, "debug_output.jpg"); err != nil {
 		fmt.Printf("Failed to save debug image: %v\n", err)

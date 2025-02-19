@@ -35,10 +35,10 @@ func New(ctx context.Context, modelPath string) (*YOLODetector, error){
 		return nil, fmt.Errorf("failed to create input tensor: %v", err)
 	}
 	go func(){
-		fmt.Println("waiting to destroy inputtensor")
+		// fmt.Println("waiting to destroy inputtensor")
 		<-ctx.Done()
 		inputTensor.Destroy()
-		fmt.Println("destroyed inputTensor")
+		// fmt.Println("destroyed inputTensor")
 	}()
 	
 
@@ -50,10 +50,10 @@ func New(ctx context.Context, modelPath string) (*YOLODetector, error){
 		return nil, fmt.Errorf("failed to create output tensor: %v", err)
 	}
 	go func (){
-		fmt.Println("waiting to destroy ouputtensor")
+		// fmt.Println("waiting to destroy ouputtensor")
 		<-ctx.Done()
 		outputTensor.Destroy()
-		fmt.Println("destroyed outputtensonr")
+		// fmt.Println("destroyed outputtensonr")
 	}()
 
 	// create ONNX runtime session
@@ -68,10 +68,10 @@ func New(ctx context.Context, modelPath string) (*YOLODetector, error){
 		return nil, fmt.Errorf("failed to create ONNX session :%v", err)
 	}
 	go func(){
-		fmt.Println("waiting to destroy detector session")
+		// fmt.Println("waiting to destroy detector session")
 		<-ctx.Done()
         session.Destroy()
-		fmt.Println("destroyed detector session")	
+		// fmt.Println("destroyed detector session")	
 	}()
 
 
@@ -181,6 +181,11 @@ func (d *YOLODetector) processPredictions(outputData []float32, params imageutil
 				bestClassIdx = j
 			}
 		}
+
+		// fmt.Printf("Raw values: x=%f, y=%f, w=%f, h=%f, obj=%f, best=%f\n",
+		// 	outputData[baseIdx], outputData[baseIdx+1], 
+		// 	outputData[baseIdx+2], outputData[baseIdx+3],
+		// 	outputData[baseIdx+4], bestClassScore)
 
 		confidence := objectness * bestClassScore
 
