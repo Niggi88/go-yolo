@@ -15,8 +15,8 @@ func New(ctx context.Context, modelPath string) (*Classifier, error) {
 	fmt.Println("SCOPE: Classifier.New")
 	defer fmt.Println("SCOPE: Classifier.New END")
 
-	INPUT_LAYER_NAME := "input_1:0" 
-	OUTPUT_LAYER_NAME := "myOutput" 
+	INPUT_LAYER_NAME := "input"
+	OUTPUT_LAYER_NAME := "empty_loaded"
 	// check if file exists
 	if _, err := os.Stat(modelPath); err != nil {
 		return nil, fmt.Errorf("model file not found: %v", err)
